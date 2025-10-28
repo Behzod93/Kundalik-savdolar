@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kundalik Daftar — Xaridlar</title>
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f8fafc;
+    margin: 0;
+    padding: 20px;
+    color: #0f172a;
+  }
+  h1 {
+    text-align: center;
+    color: #1e293b;
+    font-size: 24px;
+  }
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  form {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  input, button {
+    padding: 6px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 12px;
+    width: 100%;
+  }
+  label {
+    font-size: 12px;
+    color: #6b7280;
+  }
+  button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #1d4ed8;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px; /* scroll uchun */
+  }
+  th, td {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 10px;
+    text-align: left;
+  }
+  th {
+    background: #f1f5f9;
+  }
+  tfoot td {
+    font-weight: bold;
+  }
+  .actions button {
+    background: #f1f5f9;
+    color: #111;
+    margin-right: 5px;
+  }
+
+  /* 🔹 Responsiv qismi (460px gacha) */
+  @media (max-width: 460px) {
+    body {
+      padding: 10px;
+    }
+    h1 {
+      font-size: 18px;
+    }
+    .container {
+      padding: 10px;
+    }
+    form {
+      grid-template-columns: 1fr;
+    }
+    label {
+      font-size: 11px;
+    }
+    input, button {
+      font-size: 13px;
+      padding: 6px;
+    }
+    table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+      font-size: 12px;
+      
+
+    }
+    th, td {
+      padding: 6px;
+    }
+    button {
+      width: 100%;
+    }
+    
+  }
+
+</style>
+</head>
+<body>
+
+<h1>🧾 Kundalik Daftar — Xaridlar</h1>
+<div class="container">
+  <form id="form">
+    <div>
+      <label>Sana</label>
+      <input type="date" id="date" required>
+    </div>
+    <div>
+      <label>Do‘kon nomi</label>
+      <input type="text" id="store" placeholder="Masalan: Korzinka, Makro..." required>
+    </div>
+    <div>
+      <label><a href="https://maps.app.goo.gl/FPP39rwHR3vXaXY27">Do'kon Manzil</a></label>
+      <input type="text" id="location" placeholder="Masalan: Chilonzor, Sergeli..." required>
+    </div>
+    <div>
+      <label>Mahsulot nomi</label>
+      <input type="text" id="product" placeholder="Masalan: Non, Sut..." required>
+    </div>
+    <div>
+      <label>Qanchaligi</label>
+      <input type="number" id="quantity" placeholder="0" min="1" required>
+    </div>
+    <div>
+      <label>Narxi (so‘m)</label>
+      <input type="number" id="price" placeholder="0" min="0" required>
+    </div>
+    <div>
+      <label>To‘landi (so‘m)</label>
+      <input type="number" id="paid" placeholder="0" min="0" required>
+    </div>
+    <div style="align-self:end;">
+      <button type="submit">Qo‘shish</button>
+    </div>
+  </form>
+
+  <div class="table2" style="overflow-x:auto;">
+    <table >
+      <thead>
+        <tr>
+          <th>Sana</th>
+          <th>Do‘kon</th>
+          <th>Manzil</a></th>
+          <th>Mahsulot</th>
+          <th>Qancha</th>
+          <th>Narx</th>
+          <th>Jami</th>
+          <th>To‘landi</th>
+          <th>Qarzdorlik</th>
+          <th>Amal</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="6">Umumiy summa</td>
+          <td id="totalSum">0</td>
+          <td colspan="1">Jami to‘lov</td>
+          <td id="totalPaid">0</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="8" style="text-align:right;">Umumiy qarzdorlik:</td>
+          <td id="totalDebt" colspan="2">0</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById("form");
+  const tbody = document.getElementById("tbody");
+  const totalSumEl = document.getElementById("totalSum");
+  const totalPaidEl = document.getElementById("totalPaid");
+  const totalDebtEl = document.getElementById("totalDebt");
+
+  let entries = JSON.parse(localStorage.getItem("entries") || "[]");
+
+  function render() {
+    tbody.innerHTML = "";
+    let totalSum = 0, totalPaid = 0, totalDebt = 0;
+
+    entries.forEach((item, i) => {
+      const sum = item.quantity * item.price;
+      const debt = sum - item.paid;
+      totalSum += sum;
+      totalPaid += item.paid;
+      totalDebt += debt;
+
+      let locationUrl = item.location.startsWith("")
+        ? item.location
+        : ``;
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${item.date}</td>
+          <td>${item.store}</td>
+          <td><a href="${locationUrl}" target="_blank">${item.location}</a></td>
+          <td>${item.product}</td>
+          <td>${item.quantity}</td>
+          <td>${item.price.toLocaleString()}</td>
+          <td>${sum.toLocaleString()}</td>
+          <td>${item.paid.toLocaleString()}</td>
+          <td style="color:${debt>0?'red':'green'}">${debt.toLocaleString()}</td>
+          <td class="actions"><button onclick="removeItem(${i})">❌</button></td>
+        </tr>
+      `;
+    });
+
+    totalSumEl.textContent = totalSum.toLocaleString();
+    totalPaidEl.textContent = totalPaid.toLocaleString();
+    totalDebtEl.textContent = totalDebt.toLocaleString();
+    localStorage.setItem("entries", JSON.stringify(entries));
+  }
+
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const item = {
+      date: document.getElementById("date").value,
+      store: document.getElementById("store").value.trim(),
+      location: document.getElementById("location").value.trim(),
+      product: document.getElementById("product").value.trim(),
+      quantity: Number(document.getElementById("quantity").value),
+      price: Number(document.getElementById("price").value),
+      paid: Number(document.getElementById("paid").value)
+    };
+    entries.push(item);
+    form.reset();
+    render();
+  });
+
+  function removeItem(i) {
+    if (confirm("O‘chirishni xohlaysizmi?")) {
+      entries.splice(i, 1);
+      render();
+    }
+  }
+
+  render();
+</script>
+
+</body>
+</html>
